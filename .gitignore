@@ -1,0 +1,23 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+.venv/
+venv/
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+build/
+dist/
+wheels/
+*.egg-info/
+
+# Temporary files
+try.py
+
+# Local test data
+data/
+page1_x16.png
