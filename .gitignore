@@ -17,6 +17,7 @@ wheels/
 
 # Temporary files
 try.py
+try1.py
 
 # Local test data
 data/
