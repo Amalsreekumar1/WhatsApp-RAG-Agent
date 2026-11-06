@@ -76,47 +76,94 @@ def price_after_discount(fee_text, percent_text):
     
     return round(offer_price, 2)
 
+def course_facts(message, business, today):
+    course_fact = {
+        "course": None,
+        "fee": None,
+        "active_offer": None,
+        "offer_price": None,
+        "upcoming_offer": None,
+        "phone": business["company"]["phone"]
+    }
+
+    course = find_course(message, business["courses"])
+
+    if course is not None:
+        course_fact["course"] = course
+        course_fact["fee"] = parse_amount(course["fee"])
+
+        course_fact["active_offer"] = active_discount(course, business["discounts"], today)
+
+        if course_fact["active_offer"] is not None:
+            course_fact["offer_price"] = price_after_discount(
+                course["fee"],
+                course_fact["active_offer"]["percent"]
+            )
+
+        course_fact["upcoming_offer"] = upcoming_discount(course, business["discounts"], today)
+
+    return course_fact
+
+def format_price(amount):
+    if amount is None:
+        return None
+
+    if amount.is_integer():
+        number = f"{amount:.0f}"
+    else:
+        number = f"{amount:.2f}"
+
+    integer_part, _, decimal_part = number.partition(".")
+
+    if len(integer_part) > 3:
+        last_three = integer_part[-3:]
+        remaining = integer_part[:-3]
+
+        groups = []
+        while remaining:
+            groups.insert(0, remaining[-2:])
+            remaining = remaining[:-2]
+
+        integer_part = ",".join(groups) + "," + last_three
+
+    if decimal_part:
+        return f"₹{integer_part}.{decimal_part}"
+    return f"₹{integer_part}"
+
+def format_date(iso_text):
+    if not iso_text:
+        return None
+
+    try:
+        d = date.fromisoformat(iso_text)
+    except ValueError:
+        return None
+
+    return f"{d.day} {d.strftime('%B')} {d.year}"
+
+
 if __name__ == "__main__":
     from business import load_business
 
     business = load_business("data/demo_academy")
-    """tests = ["si course fees ethra", "hostal undo", "business hours",
-            "fee", "si, fee?", "lgs fee"]
-    for t in tests:
-        result = find_course(t, business["courses"])
-        print(repr(t), "->", result["name"] if result else None)
-
     today = date(2026, 11, 20)
-    for text in ["si fee", "lgs fee", "hostel"]:
-        course = find_course(text, business["courses"])
-        d = active_discount(course, business["discounts"], today)
-        c = upcoming_discount(course, business["discounts"], today)
-        print(text, "->", d["description"] if d else None)
-        print(text, "->", c["description"] if c else None)
 
-    course = find_course("lgs fee", business["courses"])
-    for d in [date(2026, 10, 1), date(2026, 12, 1)]:
-        u = upcoming_discount(course, business["discounts"], d)
-        print(d, "->", u["description"] if u else None)
+    for message in ["si fee", "lgs fee", "business hours"]:
+        facts = course_facts(message, business, today)
+        print(message)
 
+        if facts["course"] is None:
+            print("   course not found, office:", facts["phone"])
+            continue
 
-    course = find_course("si fee", business["courses"])
+        print("   fee:", format_price(facts["fee"]))
 
-    for d in [date(2026, 12, 15), date(2026, 12, 16)]:
-        u = active_discount(course, business["discounts"], d)
-        print(d, "->", u["description"] if u else None
-    
-    for s in ["499", "499/-", "₹1,50,000", "499-599", "", "free", "Rs. 499", None]:
-        print(repr(s), "->", parse_amount(s))"""
+        offer = facts["active_offer"]
+        if offer:
+            print("   offer:", offer["description"], format_price(facts["offer_price"]),
+                  "until", format_date(offer["valid_until"]))
 
-    test_cases = [
-        ("499", "10"),
-        ("399", "5"),
-        ("499/-", "10"),
-        ("", "10"),
-        ("499", "150")
-    ]
-
-    for fee, percent in test_cases:
-        result = price_after_discount(fee, percent)
-        print(f"Fee: {fee}, Discount: {percent}% -> {result}")
+        upcoming = facts["upcoming_offer"]
+        if upcoming:
+            print("   upcoming:", upcoming["description"],
+                  "from", format_date(upcoming["valid_from"]))
