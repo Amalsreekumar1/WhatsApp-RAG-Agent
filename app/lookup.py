@@ -1,4 +1,5 @@
 import unicodedata
+import re
 
 from clean import normalize
 from datetime import date, datetime
@@ -51,13 +52,25 @@ def upcoming_discount(course, discounts, today):
                     best = item
     return best
 
+def parse_amount(text):
+    if not isinstance(text, str):
+        return None
+
+    pattern = r'(?i)\brs\.?|₹|/-|,'
+    
+    cleaned = re.sub(pattern, '', text).strip()
+    
+    if cleaned.replace('.', '', 1).isdigit():
+        return float(cleaned)
+    return None
+
     
 
 if __name__ == "__main__":
     from business import load_business
 
     business = load_business("data/demo_academy")
-    tests = ["si course fees ethra", "hostal undo", "business hours",
+    """tests = ["si course fees ethra", "hostal undo", "business hours",
             "fee", "si, fee?", "lgs fee"]
     for t in tests:
         result = find_course(t, business["courses"])
@@ -81,4 +94,7 @@ if __name__ == "__main__":
 
     for d in [date(2026, 12, 15), date(2026, 12, 16)]:
         u = active_discount(course, business["discounts"], d)
-        print(d, "->", u["description"] if u else None)
+        print(d, "->", u["description"] if u else None)"""
+    
+    for s in ["499", "499/-", "₹1,50,000", "499-599", "", "free", "Rs. 499", None]:
+        print(repr(s), "->", parse_amount(s))
