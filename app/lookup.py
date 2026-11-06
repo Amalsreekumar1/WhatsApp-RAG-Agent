@@ -64,7 +64,17 @@ def parse_amount(text):
         return float(cleaned)
     return None
 
+def price_after_discount(fee_text, percent_text):
+    price = parse_amount(fee_text)
+    percentage = parse_amount(percent_text)
+    if price is None or percentage is None:
+        return None    
+    if 0 < percentage < 100:
+        offer_price = price - price * percentage / 100
+    else:
+        return None
     
+    return round(offer_price, 2)
 
 if __name__ == "__main__":
     from business import load_business
@@ -94,7 +104,19 @@ if __name__ == "__main__":
 
     for d in [date(2026, 12, 15), date(2026, 12, 16)]:
         u = active_discount(course, business["discounts"], d)
-        print(d, "->", u["description"] if u else None)"""
+        print(d, "->", u["description"] if u else None
     
     for s in ["499", "499/-", "₹1,50,000", "499-599", "", "free", "Rs. 499", None]:
-        print(repr(s), "->", parse_amount(s))
+        print(repr(s), "->", parse_amount(s))"""
+
+    test_cases = [
+        ("499", "10"),
+        ("399", "5"),
+        ("499/-", "10"),
+        ("", "10"),
+        ("499", "150")
+    ]
+
+    for fee, percent in test_cases:
+        result = price_after_discount(fee, percent)
+        print(f"Fee: {fee}, Discount: {percent}% -> {result}")
