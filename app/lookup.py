@@ -1,5 +1,8 @@
 import unicodedata
+
 from clean import normalize
+from datetime import date, datetime
+
 
 def word_key(text):
     text = normalize(text)
@@ -22,6 +25,33 @@ def find_course(message, courses):
                 return item
     return None
 
+today = date.today()
+
+def active_discount(course, discounts, today):
+    fallback = None
+
+    for item in discounts:
+        if item["course_id"] == course["id"] or item["course_id"] == "all":
+            start_date = date.fromisoformat(item["valid_from"])
+            end_date = date.fromisoformat(item["valid_until"])
+            if start_date <= today <= end_date:
+                if item["course_id"] == course["id"]:
+                   return item
+                else:
+                    fallback = item
+    return fallback
+
+def upcoming_discount(course, discounts, today):
+    best = None
+    for item in discounts:
+        if item["course_id"] == course["id"] or item["course_id"] == "all":
+            new_date = date.fromisoformat(item["valid_from"])
+            if new_date > today:
+                if best is None or new_date < date.fromisoformat(best["valid_from"]):
+                    best = item
+    return best
+
+    
 
 if __name__ == "__main__":
     from business import load_business
@@ -32,3 +62,23 @@ if __name__ == "__main__":
     for t in tests:
         result = find_course(t, business["courses"])
         print(repr(t), "->", result["name"] if result else None)
+
+    today = date(2026, 11, 20)
+    for text in ["si fee", "lgs fee", "hostel"]:
+        course = find_course(text, business["courses"])
+        d = active_discount(course, business["discounts"], today)
+        c = upcoming_discount(course, business["discounts"], today)
+        print(text, "->", d["description"] if d else None)
+        print(text, "->", c["description"] if c else None)
+
+    course = find_course("lgs fee", business["courses"])
+    for d in [date(2026, 10, 1), date(2026, 12, 1)]:
+        u = upcoming_discount(course, business["discounts"], d)
+        print(d, "->", u["description"] if u else None)
+
+
+    course = find_course("si fee", business["courses"])
+
+    for d in [date(2026, 12, 15), date(2026, 12, 16)]:
+        u = active_discount(course, business["discounts"], d)
+        print(d, "->", u["description"] if u else None)
