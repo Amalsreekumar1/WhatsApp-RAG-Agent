@@ -1,5 +1,4 @@
-
-# WhatsApp AI Business Assistant
+# WhatsApp AI Business Assistant (on progress)
 
 ## Project Overview
 

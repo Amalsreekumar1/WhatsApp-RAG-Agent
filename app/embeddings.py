@@ -20,12 +20,12 @@ if __name__ == "__main__":
     model = SentenceTransformer("BAAI/bge-m3")
     vectors = embed_chunks(model, chunks)
 
-    """for q in ["Refund undo?", "paisa thirike kittumo", "hostel evide close cheyyum"]:
+    for q in ["Refund undo?", "paisa thirike kittumo", "hostel evide close cheyyum"]:
         hits = best_chunk(model, vectors, q)[0][:3]
         print(q)
         for h in hits:
             print("   ", round(h["score"], 3), chunks[h["corpus_id"]]["heading"])
-    """
+    
     
     tests = [
     # English
